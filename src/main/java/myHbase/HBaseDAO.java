@@ -4,21 +4,16 @@ package myHbase;
  * Created by panhongfas on 2017/7/18.
  */
 import java.io.IOException;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
+
 public class HBaseDAO {
 
     static Configuration conf = HBaseConfiguration.create();
@@ -123,7 +118,6 @@ public class HBaseDAO {
      * return a range of rows specified by startrow and endrow
      * @param HTable, create by : HTable table = new HTable(conf, "tablename")
      * @param startrow
-     * @param endrow
      * @throws Exception
      */
     public static ResultScanner scanRange(HTable table,String startrow,String endrow) throws Exception {
@@ -137,35 +131,11 @@ public class HBaseDAO {
      * @param startrow
      * @param filter
      * @throws Exception
+     * @param endrow
      */
     public static ResultScanner scanFilter(HTable table,String startrow, Filter filter) throws Exception {
         Scan s =new Scan(Bytes.toBytes(startrow), filter);
         ResultScanner rs = table.getScanner(s);
         return rs;
-    }
-
-    public static void main(String[] args) throws Exception {
-        // TODO Auto-generated method stub
-
-        conf.set("hbase.zookeeper.property.clientPort", "2181");
-        conf.set("hbase.zookeeper.quorum", "host1.bigdata.wh.com,host2.bigdata.wh.com,host3.bigdata.wh.com");
-        conf.set("hbase.master", "host2.bigdata.wh.com:16010");
-//        HTable table = new HTable(conf, "test");
-//
-//         ResultScanner rs = HBaseDAO.scanAll(table);
-//
-//         for(Result r:rs) {
-//            System.out.println("Scan: "+r);
-//         }
-//        table.close();
-
-
-      HBaseDAO.createTable("apitable", "cf1");
-//      HBaseDAO.putRow("apitable", "100001", "testcf", "name", "liyang");
-//      HBaseDAO.putRow("apitable", "100003", "testcf", "name", "leon");
-//    	HBaseDAO.deleteRow("apitable", "100002");
-//    	HBaseDAO.getRow("apitable", "100003");
-//    	HBaseDAO.deleteTable("apitable");
-
     }
 }
