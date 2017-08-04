@@ -79,7 +79,20 @@ public class Example {
         }
     }
 
-    public static void appendData(Configuration config) throws IOException {
+    public  static void printResult(Result result, String fm, String col) {
+        System.out.println(result);
+
+        List<Cell> cells = result.getColumnCells(Bytes.toBytes(fm), Bytes.toBytes(col));
+        for (Cell cell : cells) {
+            String val = Bytes.toString(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
+
+            System.out.printf("%s:%s: %s timestamp: %d",fm,col,val,cell.getTimestamp());
+            System.out.print(" | ");
+        }
+        System.out.println();
+    }
+
+    public static void putData(Configuration config) throws IOException {
 
         try (Connection connection = ConnectionFactory.createConnection(config);
              Table tt = connection.getTable(TableName.valueOf(TABLE_NAME))) {
@@ -124,16 +137,7 @@ public class Example {
             s.setMaxVersions(20);
             ResultScanner scanner = tt.getScanner(s);
             for (Result result : scanner) {
-                System.out.println(result);
-
-                List<Cell> cells = result.getColumnCells(Bytes.toBytes(CF_DEFAULT), Bytes.toBytes(COL_NAME));
-                for (Cell cell : cells) {
-                    String name_val = Bytes.toString(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
-
-                    System.out.print("res:" + name_val + " timestamp:" + cell.getTimestamp());
-                    System.out.print(" | ");
-                }
-                System.out.println();
+                printResult(result,CF_DEFAULT,COL_NAME);
             }
             scanner.close();
             System.out.println(" Done.");
@@ -146,28 +150,92 @@ public class Example {
              Table tt = connection.getTable(TableName.valueOf(TABLE_NAME))) {
 
             Scan s = new Scan();
-            System.out.printf("scan Cell from table = %s \n", TABLE_NAME);
+            System.out.printf("scan Cell with filter from table = %s \n", TABLE_NAME);
 
-            s.addColumn(Bytes.toBytes(CF_DEFAULT), Bytes.toBytes(COL_NAME));
-            s.setMaxVersions(20);
+            s.addFamily(Bytes.toBytes(CF_DEFAULT));
+            s.setMaxVersions(2);
 
-            Filter filter1 = new RowFilter(CompareFilter.CompareOp.EQUAL,
+            Filter filter1 = new RowFilter(CompareFilter.CompareOp.LESS_OR_EQUAL,
                     new BinaryComparator(Bytes.toBytes("User00000005")));
 
             Filter filter2 = new FamilyFilter(CompareFilter.CompareOp.GREATER_OR_EQUAL,
                     new BinaryComparator(Bytes.toBytes(CF_DEFAULT)));
 
-            FilterList filterlist = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+            Filter filter3 = new DependentColumnFilter(Bytes.toBytes(CF_DEFAULT), Bytes.toBytes(COL_NAME), false,
+                    CompareFilter.CompareOp.EQUAL, new RegexStringComparator("8$"));
+
+            SingleColumnValueFilter filter4 = new SingleColumnValueFilter(Bytes.toBytes(CF_DEFAULT), Bytes.toBytes(COL_NAME),
+                    CompareFilter.CompareOp.EQUAL, new RegexStringComparator("9$"));
+//            filter4.setFilterIfMissing(false);
+            filter4.setLatestVersionOnly(false);
+
+            FilterList filterlist = new FilterList(FilterList.Operator.MUST_PASS_ALL);
             filterlist.addFilter(filter1);
-            filterlist.addFilter(filter2);
+//            filterlist.addFilter(filter2);
+//            filterlist.addFilter(filter3);
+            filterlist.addFilter(filter4);
             s.setFilter(filterlist);
 
             ResultScanner scanner = tt.getScanner(s);
             for (Result result : scanner) {
-                System.out.println(result);
+                printResult(result,CF_DEFAULT,COL_NAME);
             }
             scanner.close();
             System.out.println(" Done.");
+        }
+    }
+
+    public static void getData(Configuration config) throws IOException {
+
+        try (Connection connection = ConnectionFactory.createConnection(config);
+             Table tt = connection.getTable(TableName.valueOf(TABLE_NAME))) {
+
+            int row = 21;
+            String rowKey = String.format("User%08d", row);
+            Get get1 = new Get(Bytes.toBytes(rowKey));
+            get1.setMaxVersions(20);
+
+            System.out.printf("get Cell from table = %s \n", TABLE_NAME);
+            Result result = tt.get(get1);
+            printResult(result,CF_DEFAULT,COL_NAME);
+        }
+    }
+
+    public static void getDataWithFilter(Configuration config) throws IOException {
+
+        try (Connection connection = ConnectionFactory.createConnection(config);
+             Table tt = connection.getTable(TableName.valueOf(TABLE_NAME))) {
+
+            int row = 22;
+            String rowkey = String.format("User%08d", row);
+            Get get2 = new Get(Bytes.toBytes(rowkey));
+            get2.setMaxVersions(20);
+
+            Filter filter1 = new RowFilter(CompareFilter.CompareOp.LESS_OR_EQUAL,
+                    new BinaryComparator(Bytes.toBytes("User00000005")));
+
+            Filter filter2 = new FamilyFilter(CompareFilter.CompareOp.NOT_EQUAL,
+                    new BinaryComparator(Bytes.toBytes("f3")));
+
+            Filter filter3 = new QualifierFilter(CompareFilter.CompareOp.NOT_EQUAL,
+                    new BinaryComparator(Bytes.toBytes(COL_NAME)));
+
+            Filter filter4 = new ValueFilter(CompareFilter.CompareOp.NOT_EQUAL,
+                    new SubstringComparator("pan"));
+
+            Filter filter5 = new ValueFilter(CompareFilter.CompareOp.EQUAL,
+                    new RegexStringComparator("^\\d2$"));
+
+            FilterList filterlist = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+//            filterlist.addFilter(filter1);
+//            filterlist.addFilter(filter2);
+//            filterlist.addFilter(filter3);
+            filterlist.addFilter(filter5);
+            get2.setFilter(filterlist);
+
+            System.out.printf("get Cell with filter from table = %s \n", TABLE_NAME);
+            Result result = tt.get(get2);
+            printResult(result,CF_DEFAULT,COL_AGE);
         }
     }
 
@@ -180,10 +248,11 @@ public class Example {
         config.addResource(new Path("./", "core-site.xml"));
 
 //        createSchemaTables(config);
-//        appendData(config);
+//        putData(config);
 //        scanData(config);
         scanDataWithFilter(config);
-
+//        getData(config);
+//        getDataWithFilter(config);
         //modifySchema(config);
     }
 }
