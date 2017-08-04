@@ -25,7 +25,7 @@ public class WordCount {
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            super.map(key, value, context);
+            //super.map(key, value, context);
 
             String line = value.toString();
             StringTokenizer token = new StringTokenizer(line);
@@ -62,7 +62,7 @@ public class WordCount {
 
             job.setJarByClass(WordCount.class);
 
-            job.setMapOutputKeyClass(Text.class);
+            job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(IntWritable.class);
 
             job.setMapperClass(WordCountMapper.class);
@@ -70,6 +70,8 @@ public class WordCount {
 
             job.setInputFormatClass(TextInputFormat.class);
             job.setOutputFormatClass(TextOutputFormat.class);
+
+            job.setUser("hdfs");
 
             Path inputpath = new Path("/tmp/111");
             Path outputpath = new Path("/tmp/222");
@@ -82,10 +84,10 @@ public class WordCount {
             FileOutputFormat.setOutputPath(job, outputpath);
 
             boolean res = job.waitForCompletion(true);
-            System.out.printf("Map Task Done, res = %b",res);
-            System.out.println();
+            //System.out.printf("Map Task Done, res = %b",res);
+            //System.out.println();
 
-            System.exit(1);
+            //System.exit(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
