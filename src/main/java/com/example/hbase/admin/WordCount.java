@@ -25,8 +25,6 @@ public class WordCount {
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            //super.map(key, value, context);
-
             String line = value.toString();
             StringTokenizer token = new StringTokenizer(line);
             while (token.hasMoreTokens()) {
@@ -40,8 +38,6 @@ public class WordCount {
 
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            super.reduce(key, values, context);
-
             int count = 0;
             for (IntWritable v : values) {
                 count += v.get();
@@ -58,23 +54,26 @@ public class WordCount {
 
         try {
 
-            Job job = Job.getInstance(conf, "wordcount");
+            Job job = Job.getInstance(conf, "panhongfa");
 
             job.setJarByClass(WordCount.class);
-
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(IntWritable.class);
 
             job.setMapperClass(WordCountMapper.class);
             job.setReducerClass(WordCountReducer.class);
 
+            //job的mapper类输出的kv数据类型
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(IntWritable.class);
+
+            //job的reducer类输出的kv数据类型
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(IntWritable.class);
+
             job.setInputFormatClass(TextInputFormat.class);
             job.setOutputFormatClass(TextOutputFormat.class);
 
-            job.setUser("hdfs");
-
             Path inputpath = new Path("/tmp/111");
-            Path outputpath = new Path("/tmp/222");
+            Path outputpath = new Path("/tmp/444");
 
             FileSystem fs = FileSystem.get(conf);
             if (fs.exists(outputpath)) {
@@ -84,10 +83,6 @@ public class WordCount {
             FileOutputFormat.setOutputPath(job, outputpath);
 
             boolean res = job.waitForCompletion(true);
-            //System.out.printf("Map Task Done, res = %b",res);
-            //System.out.println();
-
-            //System.exit(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
