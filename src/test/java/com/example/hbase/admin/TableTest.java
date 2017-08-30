@@ -13,7 +13,7 @@ public class TableTest extends BaseTest {
 
     @Test
     public void test001CreateTable() throws Exception {
-
+e
         try (Connection connection = ConnectionFactory.createConnection(config);
              Admin admin = connection.getAdmin()) {
 
