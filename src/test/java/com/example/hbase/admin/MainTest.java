@@ -5,10 +5,13 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TableTest.class,
+        ClusterTest.class,
+        NameSpaceTest.class,
+        DDLTest.class,
+        DMLTest.class,
         FilterTest.class,
+        CoprocessorTest.class,
         ReadOnlyTest.class,
-        DeleteTest.class
 
 })
 public class MainTest {
