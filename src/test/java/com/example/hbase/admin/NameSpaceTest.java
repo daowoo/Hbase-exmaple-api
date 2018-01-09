@@ -17,6 +17,7 @@ import java.util.BitSet;
 * @since <pre> </pre>
 * @version 1.0 
 */
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class NameSpaceTest extends BaseTest {
     protected static final String NAMESPACE_NAME = "daowoo";
